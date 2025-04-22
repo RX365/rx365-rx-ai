@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "ES6",
+        "outDir": "out/src",
+        "lib": [
+            "ES6"
+        ],
+        "sourceMap": true,
+        "rootDir": "src",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "resolveJsonModule": true
+    },
+    "exclude": [
+        "node_modules",
+        ".vscode-test"
+    ]
+}
