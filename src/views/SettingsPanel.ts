@@ -54,6 +54,35 @@ public reveal(): void {
                   background-color: var(--vscode-editor-background);
                   color: var(--vscode-editor-foreground);
               }
+                  
+              .local-provider {
+                  border-left: 4px solid var(--vscode-gitDecoration-addedResourceForeground);
+              }
+              
+              .provider-badge {
+                  display: inline-block;
+                  padding: 2px 6px;
+                  font-size: 0.8em;
+                  border-radius: 4px;
+                  margin-left: 8px;
+              }
+              
+              .local-badge {
+                  background-color: var(--vscode-gitDecoration-addedResourceForeground);
+                  color: white;
+              }
+              
+              .cloud-badge {
+                  background-color: var(--vscode-gitDecoration-modifiedResourceForeground);
+                  color: white;
+              }
+              
+              .api-key-note {
+                  font-size: 0.8em;
+                  color: var(--vscode-descriptionForeground);
+                  margin-top: 4px;
+              }
+
               .provider {
                   margin-bottom: 16px;
                   padding: 12px;
@@ -111,13 +140,25 @@ public reveal(): void {
       </head>
       <body>
           <h2>Select AI Provider and Model</h2>
-          ${providers.map(provider => `
-              <div class="provider ${currentProvider === provider.id ? 'provider-selected' : ''}" data-provider="${provider.id}">
+    ${providers.map(provider => `
+              <div class="provider ${currentProvider === provider.id ? 'provider-selected' : ''} ${provider.isLocal ? 'local-provider' : ''}" 
+                   data-provider="${provider.id}">
                   <div class="provider-header">
                       <span class="provider-name">${provider.name}</span>
+                      <span class="provider-badge ${provider.isLocal ? 'local-badge' : 'cloud-badge'}">
+                          ${provider.isLocal ? 'Local' : 'Cloud'}
+                      </span>
                       <input type="radio" name="provider" ${currentProvider === provider.id ? 'checked' : ''}>
                   </div>
-                  <input type="text" class="api-key-input" placeholder="Enter API key" value="${provider.apiKey || ''}" data-provider="${provider.id}">
+            
+                  ${!provider.isLocal ? `
+                      <input type="text" class="api-key-input" placeholder="Enter API key" value="${provider.apiKey || ''}" 
+                             data-provider="${provider.id}">
+                      <div class="api-key-note">Required for cloud providers</div>
+                  ` : `
+                      <div class="api-key-note">No API key needed for local provider</div>
+                  `}
+            
                   <div class="models">
                       ${provider.models.map(model => `
                           <div class="model ${currentModel === model.id && currentProvider === provider.id ? 'model-selected' : ''}" 

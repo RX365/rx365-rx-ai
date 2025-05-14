@@ -7,6 +7,8 @@ export interface AIModel {
 }
 
 export interface AIResponse {
+    content: string | PromiseLike<string>;
+    response: string | PromiseLike<string>;
     choices: Array<{
         message: {
             content: string;
@@ -21,6 +23,7 @@ export interface AIProvider {
   baseUrl?: string;
   models: AIModel[];
   defaultModel?: string;
+  isLocal?: boolean;
 }
 
 export interface AIConfiguration {

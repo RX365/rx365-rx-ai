@@ -211,7 +211,9 @@ public reveal(): void {
     if (!provider) {
       throw new Error(`Provider ${providerId} not found`);
     }
-
+    if (!provider.isLocal && !provider.apiKey) {
+    throw new Error(`API key is required for ${provider.name}`);
+    }
     const model = provider.models.find(m => m.id === modelId);
     if (!model) {
       throw new Error(`Model ${modelId} not found for provider ${providerId}`);

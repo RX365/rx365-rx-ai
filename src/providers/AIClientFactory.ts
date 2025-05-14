@@ -1,6 +1,7 @@
 import { AIClient } from '../types';
 import { DeepSeekClient } from './DeepSeekClient';
 import { OpenAIClient } from './OpenAIClient';
+import { OllamaClient } from './OllamaClient';
 
 export class AIClientFactory {
   static createClient(providerId: string, apiKey: string, baseUrl: string, model: string): AIClient {
@@ -9,6 +10,8 @@ export class AIClientFactory {
         return new DeepSeekClient(apiKey, baseUrl, model);
       case 'openai':
         return new OpenAIClient(apiKey, baseUrl, model);
+      case 'ollama':
+        return new OllamaClient(apiKey, baseUrl, model);
       default:
         throw new Error(`Unknown provider: ${providerId}`);
     }

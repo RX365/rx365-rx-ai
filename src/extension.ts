@@ -13,6 +13,21 @@ export function activate(context: vscode.ExtensionContext) {
     currentProvider: undefined,
     currentModel: undefined,
     providers: {
+  ollama: {
+    id: 'ollama',
+    name: 'Ollama (Local)',
+    apiKey: '',
+    baseUrl: 'http://localhost:11434',
+    isLocal: true,
+    models: [
+      { id: 'deepseek-coder:1.3b', name: 'DeepSeek Coder 1.3B', provider: 'ollama' },
+      { id: 'qwen2.5-coder:3b', name: 'Qwen2.5 Coder 3B', provider: 'ollama' },
+      { id: 'codellama', name: 'CodeLlama', provider: 'ollama' },
+      { id: 'deepseek-r1:7b', name: 'DeepSeek R1 7B', provider: 'ollama' },
+      { id: 'llama2', name: 'Llama 2', provider: 'ollama' },
+      { id: 'mistral', name: 'Mistral', provider: 'ollama' }
+    ]
+      },
       deepseek: {
         id: 'deepseek',
         name: 'DeepSeek',
@@ -38,11 +53,19 @@ export function activate(context: vscode.ExtensionContext) {
 
   // Load saved configuration
   const loadConfig = () => {
-    const savedConfig = context.globalState.get<AIConfiguration>('aiConfig');
-    if (savedConfig) {
-      Object.assign(config, savedConfig);
-    }
-  };
+  const savedConfig = context.globalState.get<AIConfiguration>('aiConfig');
+  if (savedConfig) {
+    // 错误做法：直接覆盖整个 providers
+    // config.providers = savedConfig.providers; // 这会删除 deepseek 模型
+
+    // 正确做法：仅合并必要的字段（如 apiKey）
+    Object.keys(savedConfig.providers).forEach((key) => {
+      if (config.providers[key]) {
+        config.providers[key].apiKey = savedConfig.providers[key].apiKey || '';
+      }
+    });
+  }
+};
 
   // Save configuration
   const saveConfig = () => {
