@@ -2,15 +2,23 @@ import * as vscode from 'vscode';
 import { AIConfiguration, AIProvider, AIModel } from '../types';
 
 export class SettingsPanel {
-  public onDidDispose(callback: () => void): void {
-    this.panel.onDidDispose(callback);
-	}
+  
 
-public reveal(): void {
-    this.panel.reveal();
-	}
   private readonly panel: vscode.WebviewPanel;
   private config: AIConfiguration;
+
+  // 添加公开方法
+    public sendMessageToWebview(message: any) {
+        this.panel.webview.postMessage(message);
+    }
+
+    public onDidDispose(callback: () => void): void {
+        this.panel.onDidDispose(callback);
+    }
+
+    public reveal(): void {
+        this.panel.reveal();
+    }
 
   constructor(context: vscode.ExtensionContext, config: AIConfiguration) {
     this.config = config;
@@ -54,6 +62,35 @@ public reveal(): void {
                   background-color: var(--vscode-editor-background);
                   color: var(--vscode-editor-foreground);
               }
+                  
+              .local-provider {
+                  border-left: 4px solid var(--vscode-gitDecoration-addedResourceForeground);
+              }
+              
+              .provider-badge {
+                  display: inline-block;
+                  padding: 2px 6px;
+                  font-size: 0.8em;
+                  border-radius: 4px;
+                  margin-left: 8px;
+              }
+              
+              .local-badge {
+                  background-color: var(--vscode-gitDecoration-addedResourceForeground);
+                  color: white;
+              }
+              
+              .cloud-badge {
+                  background-color: var(--vscode-gitDecoration-modifiedResourceForeground);
+                  color: white;
+              }
+              
+              .api-key-note {
+                  font-size: 0.8em;
+                  color: var(--vscode-descriptionForeground);
+                  margin-top: 4px;
+              }
+
               .provider {
                   margin-bottom: 16px;
                   padding: 12px;
@@ -95,29 +132,60 @@ public reveal(): void {
                   color: var(--vscode-input-foreground);
                   border-radius: 4px;
               }
-              .save-button {
-                  margin-top: 16px;
+              .action-button {
                   padding: 8px 16px;
+                  margin-right: 8px;
                   background-color: var(--vscode-button-background);
                   color: var(--vscode-button-foreground);
                   border: none;
                   border-radius: 4px;
                   cursor: pointer;
               }
-              .save-button:hover {
+              .action-button:hover {
                   background-color: var(--vscode-button-hoverBackground);
+              }
+              .section-title {
+                  margin-top: 24px;
+                  margin-bottom: 8px;
+                  font-weight: bold;
+                  border-bottom: 1px solid var(--vscode-input-border);
+                  padding-bottom: 4px;
+              }
+              .status-message {
+                  margin-top: 12px;
+                  padding: 8px;
+                  border-radius: 4px;
+                  background-color: var(--vscode-input-background);
+                  display: none;
+              }
+              .controls-container {
+                  display: flex;
+                  gap: 8px;
+                  margin-top: 12px;
               }
           </style>
       </head>
       <body>
-          <h2>Select AI Provider and Model</h2>
+          <h2>AI Provider Settings</h2>
           ${providers.map(provider => `
-              <div class="provider ${currentProvider === provider.id ? 'provider-selected' : ''}" data-provider="${provider.id}">
+              <div class="provider ${currentProvider === provider.id ? 'provider-selected' : ''} ${provider.isLocal ? 'local-provider' : ''}" 
+                   data-provider="${provider.id}">
                   <div class="provider-header">
                       <span class="provider-name">${provider.name}</span>
+                      <span class="provider-badge ${provider.isLocal ? 'local-badge' : 'cloud-badge'}">
+                          ${provider.isLocal ? 'Local' : 'Cloud'}
+                      </span>
                       <input type="radio" name="provider" ${currentProvider === provider.id ? 'checked' : ''}>
                   </div>
-                  <input type="text" class="api-key-input" placeholder="Enter API key" value="${provider.apiKey || ''}" data-provider="${provider.id}">
+            
+                  ${!provider.isLocal ? `
+                      <input type="text" class="api-key-input" placeholder="Enter API key" value="${provider.apiKey || ''}" 
+                             data-provider="${provider.id}">
+                      <div class="api-key-note">Required for cloud providers</div>
+                  ` : `
+                      <div class="api-key-note">No API key needed for local provider</div>
+                  `}
+            
                   <div class="models">
                       ${provider.models.map(model => `
                           <div class="model ${currentModel === model.id && currentProvider === provider.id ? 'model-selected' : ''}" 
@@ -129,7 +197,17 @@ public reveal(): void {
                   </div>
               </div>
           `).join('')}
-          <button class="save-button" id="save-button">Save Settings</button>
+
+          <div class="section-title">Code Context Settings</div>
+          <p>Load your local code files to provide context-aware AI assistance:</p>
+          
+          <div class="controls-container">
+              <button class="action-button" id="load-files-button">Load Code Files</button>
+              <button class="action-button" id="clear-store-button">Clear Vector Store</button>
+          </div>
+          
+          <div id="status-message" class="status-message"></div>
+
           <script>
               const vscode = acquireVsCodeApi();
               
@@ -157,18 +235,43 @@ public reveal(): void {
                   });
               });
               
-              document.getElementById('save-button').addEventListener('click', () => {
-                  const providers = {};
-                  document.querySelectorAll('.provider').forEach(providerEl => {
-                      const providerId = providerEl.dataset.provider;
-                      const apiKey = providerEl.querySelector('.api-key-input').value;
-                      providers[providerId] = { apiKey };
-                  });
+              document.getElementById('load-files-button').addEventListener('click', () => {
+                  const status = document.getElementById('status-message');
+                  status.style.display = 'block';
+                  status.textContent = 'Loading and processing code files...';
+                  status.style.backgroundColor = 'var(--vscode-input-background)';
                   
                   vscode.postMessage({
-                      command: 'saveSettings',
-                      providers
+                      command: 'loadCodeFiles'
                   });
+              });
+              
+              document.getElementById('clear-store-button').addEventListener('click', () => {
+                  if (confirm('Are you sure you want to clear all stored code embeddings?')) {
+                      const status = document.getElementById('status-message');
+                      status.style.display = 'block';
+                      status.textContent = 'Clearing vector store...';
+                      
+                      vscode.postMessage({
+                          command: 'clearVectorStore'
+                      });
+                  }
+              });
+
+              // Handle messages from extension
+              window.addEventListener('message', event => {
+                  const message = event.data;
+                  const status = document.getElementById('status-message');
+                  
+                  switch (message.command) {
+                      case 'fileLoadResult':
+                          status.textContent = message.text;
+                          status.style.backgroundColor = message.success 
+                              ? 'var(--vscode-input-background)' 
+                              : 'var(--vscode-inputValidation-errorBackground)';
+                          setTimeout(() => status.style.display = 'none', 5000);
+                          break;
+                  }
               });
           </script>
       </body>
@@ -189,14 +292,16 @@ public reveal(): void {
             this.config.currentModel = message.modelId;
             this.updateWebview();
             break;
-          case 'saveSettings':
-            Object.keys(message.providers).forEach(providerId => {
-              if (this.config.providers[providerId]) {
-                this.config.providers[providerId].apiKey = message.providers[providerId].apiKey;
-              }
+          case 'loadCodeFiles':
+            await vscode.commands.executeCommand('ai-code-assistant.loadCodeFiles');
+            break;
+          case 'clearVectorStore':
+            await vscode.commands.executeCommand('ai-code-assistant.clearVectorStore');
+            this.panel.webview.postMessage({
+              command: 'fileLoadResult',
+              text: 'Vector store cleared successfully',
+              success: true
             });
-            vscode.window.showInformationMessage('Settings saved successfully');
-            this.panel.dispose();
             break;
         }
       },

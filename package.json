@@ -10,14 +10,27 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:ai-code-assistant.openPanel"
+    "onCommand:ai-code-assistant.openPanel",
+    "onCommand:ai-code-assistant.loadCodeFiles",
+    "onCommand:ai-code-assistant.clearVectorStore"
   ],
   "main": "./out/src/extension.js",
+  "resolutions": {
+    "sharp": "0.31.3"
+  },
   "contributes": {
     "commands": [
       {
         "command": "ai-code-assistant.openPanel",
         "title": "Open AI Code Assistant"
+      },
+      {
+        "command": "ai-code-assistant.loadCodeFiles",
+        "title": "Load Code Files for AI Context"
+      },
+      {
+        "command": "ai-code-assistant.clearVectorStore",
+        "title": "Clear Vector Store"
       }
     ],
     "views": {
@@ -44,7 +57,9 @@
     "test": "node ./out/test/runTest.js"
   },
   "dependencies": {
+    "@xenova/transformers": "^2.6.0",
     "axios": "^1.3.4",
+    "sharp": "^0.34.2",
     "vscode": "^1.1.37"
   },
   "devDependencies": {

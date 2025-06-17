@@ -7,6 +7,8 @@ export interface AIModel {
 }
 
 export interface AIResponse {
+    content: string | PromiseLike<string>;
+    response: string | PromiseLike<string>;
     choices: Array<{
         message: {
             content: string;
@@ -21,6 +23,7 @@ export interface AIProvider {
   baseUrl?: string;
   models: AIModel[];
   defaultModel?: string;
+  isLocal?: boolean;
 }
 
 export interface AIConfiguration {
@@ -55,4 +58,21 @@ export abstract class BaseAIClient implements AIClient {
         });
         return response.data as AIResponse;
     }
+}
+
+export interface CodeChunk {
+  filePath: string;
+  content: string;
+  embedding: number[];
+}
+
+export interface VectorStore {
+  chunks: CodeChunk[];
+  addChunks(chunks: CodeChunk[]): Promise<void>;
+  search(query: string, topK: number): Promise<CodeChunk[]>;
+  clear(): Promise<void>;
+}
+
+export interface CodeFileLoader {
+  loadFiles(filePaths: string[]): Promise<CodeChunk[]>;
 }
