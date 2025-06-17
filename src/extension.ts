@@ -46,6 +46,7 @@ async function initializeConfig(context: vscode.ExtensionContext): Promise<AICon
     currentProvider: undefined,
     currentModel: undefined,
     providers: {
+<<<<<<< HEAD
       ollama: {
         id: 'ollama',
         name: 'Ollama (Local)',
@@ -60,6 +61,22 @@ async function initializeConfig(context: vscode.ExtensionContext): Promise<AICon
           { id: 'llama2', name: 'Llama 2', provider: 'ollama' },
           { id: 'mistral', name: 'Mistral', provider: 'ollama' }
         ]
+=======
+  ollama: {
+    id: 'ollama',
+    name: 'Ollama (Local)',
+    apiKey: '',
+    baseUrl: 'http://localhost:11434',
+    isLocal: true,
+    models: [
+      { id: 'deepseek-coder:1.3b', name: 'DeepSeek Coder 1.3B', provider: 'ollama' },
+      { id: 'qwen2.5-coder:3b', name: 'Qwen2.5 Coder 3B', provider: 'ollama' },
+      { id: 'codellama', name: 'CodeLlama', provider: 'ollama' },
+      { id: 'deepseek-r1:7b', name: 'DeepSeek R1 7B', provider: 'ollama' },
+      { id: 'llama2', name: 'Llama 2', provider: 'ollama' },
+      { id: 'mistral', name: 'Mistral', provider: 'ollama' }
+    ]
+>>>>>>> 255de2211eea200f0fd6e3b3fa842722ee295af3
       },
       deepseek: {
         id: 'deepseek',
@@ -84,6 +101,7 @@ async function initializeConfig(context: vscode.ExtensionContext): Promise<AICon
     }
   };
 
+<<<<<<< HEAD
   try {
     const savedConfig = context.globalState.get<AIConfiguration>('aiConfig');
     if (savedConfig) {
@@ -98,6 +116,23 @@ async function initializeConfig(context: vscode.ExtensionContext): Promise<AICon
       `Failed to load saved configuration: ${error instanceof Error ? error.message : String(error)}`
     );
   }
+=======
+  // Load saved configuration
+  const loadConfig = () => {
+  const savedConfig = context.globalState.get<AIConfiguration>('aiConfig');
+  if (savedConfig) {
+    // 错误做法：直接覆盖整个 providers
+    // config.providers = savedConfig.providers; // 这会删除 deepseek 模型
+
+    // 正确做法：仅合并必要的字段（如 apiKey）
+    Object.keys(savedConfig.providers).forEach((key) => {
+      if (config.providers[key]) {
+        config.providers[key].apiKey = savedConfig.providers[key].apiKey || '';
+      }
+    });
+  }
+};
+>>>>>>> 255de2211eea200f0fd6e3b3fa842722ee295af3
 
   return config;
 }

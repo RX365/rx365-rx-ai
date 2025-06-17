@@ -320,6 +320,7 @@ private async handleSendMessage(text: string) {
         vscode.window.showErrorMessage('No AI provider selected');
         return;
     }
+<<<<<<< HEAD
 
     try {
         // 先显示用户消息
@@ -366,6 +367,14 @@ private async handleSendMessage(text: string) {
         this.aiClient = AIClientFactory.createClient(providerId, provider.apiKey, provider.baseUrl || '', modelId);
         this.config.currentProvider = providerId;
         this.config.currentModel = modelId;
+=======
+    if (!provider.isLocal && !provider.apiKey) {
+    throw new Error(`API key is required for ${provider.name}`);
+    }
+    const model = provider.models.find(m => m.id === modelId);
+    if (!model) {
+      throw new Error(`Model ${modelId} not found for provider ${providerId}`);
+>>>>>>> 255de2211eea200f0fd6e3b3fa842722ee295af3
     }
 
     public dispose() {
